@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python
-
-import os, Tkinter, ttk, tkFileDialog
+VERSION = "1.0"
+import os, Tkinter, ttk, tkFileDialog, threading
 from Tkconstants import *
 from pyftpdlib import ftpserver
 
@@ -23,16 +23,45 @@ listen_ip.set("0.0.0.0")
 listen_port = Tkinter.StringVar()
 listen_port.set("21")
 
+authorizer = None
+ftp_handler = None
+ftpd = None
+
 def directory_select_action():
-    root_dir.set(tkFileDialog.askdirectory().replace("/","\\"))
+    root_dir.set(tkFileDialog.askdirectory().replace("/" , str(os.sep)))
 def start_action():
     print "Start action performed"
+    global authorizer
+    authorizer = ftpserver.DummyAuthorizer()
+    print "Strating to share: '"+ root_dir.get() + "'"
+    authorizer.add_user(username.get(), password.get(), homedir=str(root_dir.get()), perm='elradfmw')
+    global ftp_handler
+    ftp_handler = ftpserver.FTPHandler
+    ftp_handler.authorizer = authorizer
+    ftp_handler.banner = "Course Work FTP Lite %s welcomes You" % VERSION
+    address = (listen_ip.get(), int(listen_port.get()))
+    global ftpd
+    ftpd = ftpserver.FTPServer(address, ftp_handler)
+    ftpd.max_cons = 256
+    ftpd.max_cons_per_ip = 5
     start_button.state(['disabled'])
     stop_button.state(['!disabled'])
+    current_state.set("running server")
+    def run_forever_serv():
+        ftpd.serve_forever()
+    threading.Thread(target=run_forever_serv).start()
 def stop_action():
     print "Stop action performed"
+    global ftpd
+    global authorizer
+    global ftp_handler
+    ftpd.close_all()
+    del ftpd
+    del authorizer
+    del ftp_handler
     start_button.state(['!disabled'])
     stop_button.state(['disabled'])
+    current_state.set("not running")
     
 #Frames
 login_frame = ttk.Frame(tk,relief=SOLID, borderwidth=1)
@@ -97,17 +126,8 @@ state_value = ttk.Label(state_frame, textvariable=current_state)
 state_value.pack(side=RIGHT)
 state_value['foreground'] = "blue"
 
-#FTP TOFO: Daemonise
-authorizer = ftpserver.DummyAuthorizer()
-authorizer.add_user('user', '12345', os.getcwd(), perm='elradfmw')
-ftp_handler = ftpserver.FTPHandler
-ftp_handler.authorizer = authorizer
-ftp_handler.banner = "pyftpdlib %s based ftpd ready." %ftpserver.__ver__
-address = ('0.0.0.0', 21)
-ftpd = ftpserver.FTPServer(address, ftp_handler)
-ftpd.max_cons = 256
-ftpd.max_cons_per_ip = 5
-
-    # start ftp server
-ftpd.serve_forever()
 tk.mainloop()
+try:
+    ftpd.close_all()
+except:
+    pass
