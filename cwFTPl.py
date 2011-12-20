@@ -1,5 +1,6 @@
-﻿#!/usr/bin/env python
-VERSION = "1.0"
+#!/usr/bin/env python
+
+VERSION = "1.0 RELEASE"
 import os, Tkinter, ttk, tkFileDialog, threading
 from Tkconstants import *
 from pyftpdlib import ftpserver
@@ -131,3 +132,4 @@ try:
     ftpd.close_all()
 except:
     pass
+
