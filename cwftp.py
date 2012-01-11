@@ -8,11 +8,11 @@ from pyftpdlib import ftpserver
 tk = Tkinter.Tk()
 tk.geometry("390x212")
 tk.minsize(330,212)
-tk.title("Course work FTP Server Lite")
+tk.title("cw FTP Server " + VERSION)
 
 #Values
 root_dir = Tkinter.StringVar()
-root_dir.set(os.getcwd() + os.sep + "share")
+root_dir.set(os.getcwd() + os.sep)
 username = Tkinter.StringVar()
 username.set("user")
 password = Tkinter.StringVar()
@@ -39,7 +39,7 @@ def start_action():
     global ftp_handler
     ftp_handler = ftpserver.FTPHandler
     ftp_handler.authorizer = authorizer
-    ftp_handler.banner = "Course Work FTP Lite %s welcomes You" % VERSION
+    ftp_handler.banner = "cw FTP server %s" % VERSION
     address = (listen_ip.get(), int(listen_port.get()))
     global ftpd
     ftpd = ftpserver.FTPServer(address, ftp_handler)
